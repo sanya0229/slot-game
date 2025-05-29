@@ -4,7 +4,7 @@ import { slotImages } from "../../data/slotImages";
 import Api from "../../api";
 
 const Main = () => {
-	const [matrix, setMatrix] = useState(null);
+	const [matrix, setMatrix] = useState(() => generateRandomMatrix(3, 5, 7));
 	const [spinningMatrix, setSpinningMatrix] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
@@ -13,17 +13,17 @@ const Main = () => {
 		let intervalId;
 		if (loading) {
 			intervalId = setInterval(() => {
-				setSpinningMatrix(generateRandomMatrix(4, 5, 7));
+				setSpinningMatrix(generateRandomMatrix(3, 5, 7));
 			}, 100);
 		}
 		return () => clearInterval(intervalId);
 	}, [loading]);
 
-	const generateRandomMatrix = (x, y, max) => {
+	function generateRandomMatrix(x, y, max) {
 		return Array.from({ length: y }, () =>
 				Array.from({ length: x }, () => Math.floor(Math.random() * (max + 1)))
 		);
-	};
+	}
 
 	const handleClick = () => {
 		setLoading(true);
@@ -57,7 +57,7 @@ const Main = () => {
 										className={`${styles.row} ${loading ? styles.spinning : styles.bounce}`}
 								>
 									{row.map((cell, i) => (
-											<img key={i} src={slotImages[cell]} alt={`icon_${cell}`} />
+											<img key={`${ slotImages[ cell ] }-${ i }`} src={slotImages[cell]} alt={`icon_${cell}`} />
 									))}
 								</div>
 						))}
