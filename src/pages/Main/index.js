@@ -1,23 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import styles from './style.module.css';
-import { slotImages } from "../../data/slotImages";
-import Api from "../../api";
+import { slotImages } from '../../data/slotImages';
+import Api from '../../api';
 
 const Main = () => {
-	const [matrix, setMatrix] = useState(() => generateRandomMatrix(3, 5, 7));
-	const [spinningMatrix, setSpinningMatrix] = useState(null);
+	const [matrix, setMatrix] = useState(() => generateRandomMatrix(5, 3, 7));
+	const [spinningMatrix, setSpinningMatrix] = useState(matrix);
+	const [finalMatrix, setFinalMatrix] = useState(null);
 	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState(null);
+	const [stoppedCols, setStoppedCols] = useState([false, false, false, false, false]);
 
 	useEffect(() => {
-		let intervalId;
+		let interval;
 		if (loading) {
-			intervalId = setInterval(() => {
-				setSpinningMatrix(generateRandomMatrix(3, 5, 7));
+			interval = setInterval(() => {
+				setSpinningMatrix((prev) => {
+					const next = generateRandomMatrix(5, 3, 7);
+					return next.map((row, y) =>
+							row.map((_, x) => (stoppedCols[x] ? finalMatrix[y][x] : next[y][x]))
+					);
+				});
 			}, 100);
 		}
-		return () => clearInterval(intervalId);
-	}, [loading]);
+		return () => clearInterval(interval);
+	}, [loading, stoppedCols, finalMatrix]);
+
+	useEffect(() => {
+		if (finalMatrix && loading) {
+			let col = -1;
+			const stopNext = () => {
+				setStoppedCols((prev) => {
+					const updated = [...prev];
+					updated[col] = true;
+					return updated;
+				});
+				col++;
+				if (col <= 3) {
+					setTimeout(stopNext, 300);
+				} else {
+					setTimeout(() => {
+						setMatrix(finalMatrix);
+						setLoading(false);
+					}, 300);
+				}
+			};
+			stopNext();
+		}
+	}, [finalMatrix, loading]);
 
 	function generateRandomMatrix(x, y, max) {
 		return Array.from({ length: y }, () =>
@@ -27,21 +56,17 @@ const Main = () => {
 
 	const handleClick = () => {
 		setLoading(true);
-		setError(null);
+		setFinalMatrix(null);
 		setMatrix(null);
+		setStoppedCols([false, false, false, false, false]);
 
-		Api.getMatrix({ x: 5, y: 3, max: 7 })
-				.then(res => {
-					setTimeout(() => {
-						setMatrix(res.data.matrix);
-						setLoading(false);
-						setSpinningMatrix(null);
-					}, 2000);
+		Api.getMatrix({ x: 3, y: 5, max: 7 })
+				.then((res) => {
+					setFinalMatrix(res.data.matrix);
 				})
-				.catch(err => {
-					setError('Error: ' + err.message);
+				.catch(() => {
 					setLoading(false);
-					setSpinningMatrix(null);
+					setStoppedCols([true, true, true, true, true]);
 				});
 	};
 
@@ -51,19 +76,26 @@ const Main = () => {
 			<div className={styles.wrapper}>
 				<div className={styles.slothContainer}>
 					<div className={styles.reel}>
-						{displayMatrix && displayMatrix.map((row, rowIndex) => (
-								<div
-										key={rowIndex}
-										className={`${styles.row} ${loading ? styles.spinning : styles.bounce}`}
-								>
-									{row.map((cell, i) => (
-											<img key={`${ slotImages[ cell ] }-${ i }`} src={slotImages[cell]} alt={`icon_${cell}`} />
-									))}
-								</div>
-						))}
+						{displayMatrix &&
+								displayMatrix[0].map((_, colIndex) => (
+										<div
+												key={colIndex}
+												className={`${styles.row} ${
+														loading && !stoppedCols[colIndex] ? styles.spinning : styles.bounce
+												}`}
+										>
+											{displayMatrix.map((row, rowIndex) => (
+													<img
+															key={`${rowIndex}-${colIndex}`}
+															src={slotImages[row[colIndex]]}
+															alt={`icon_${row[colIndex]}`}
+													/>
+											))}
+										</div>
+								))}
 					</div>
 					<div onClick={handleClick} className={styles.spin}>
-						<img src="/slots/assets/images/spin.png" alt="Spin" />
+						<img src="/assets/images/spin.png" alt="Spin" />
 					</div>
 				</div>
 			</div>
