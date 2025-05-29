@@ -95,7 +95,7 @@ const Main = () => {
 								))}
 					</div>
 					<div onClick={handleClick} className={styles.spin}>
-						<img src="/assets/images/spin.png" alt="Spin" />
+						<img src="/slots/assets/images/spin.png" alt="Spin" />
 					</div>
 				</div>
 			</div>
