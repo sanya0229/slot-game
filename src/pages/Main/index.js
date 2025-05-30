@@ -9,6 +9,27 @@ const Main = () => {
 	const [finalMatrix, setFinalMatrix] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [stoppedCols, setStoppedCols] = useState([false, false, false, false, false]);
+	const [activeCols, setActiveCols] = useState([false, false, false, false, false]);
+
+	useEffect(() => {
+		if (loading) {
+			let col = -1;
+			const startNext = () => {
+				setActiveCols((prev) => {
+					const updated = [...prev];
+					updated[col] = true;
+					return updated;
+				});
+				col++;
+				if (col < 5) {
+					setTimeout(startNext, 250);
+				}
+			};
+			startNext();
+		} else {
+			setActiveCols([false, false, false, false, false]);
+		}
+	}, [loading]);
 
 	useEffect(() => {
 		let interval;
@@ -17,13 +38,15 @@ const Main = () => {
 				setSpinningMatrix((prev) => {
 					const next = generateRandomMatrix(5, 3, 7);
 					return next.map((row, y) =>
-							row.map((_, x) => (stoppedCols[x] ? finalMatrix[y][x] : next[y][x]))
+							row.map((_, x) =>
+									stoppedCols[x] ? finalMatrix[y][x] : (activeCols[x] ? next[y][x] : prev[y][x])
+							)
 					);
 				});
-			}, 100);
+			}, 50);
 		}
 		return () => clearInterval(interval);
-	}, [loading, stoppedCols, finalMatrix]);
+	}, [loading, stoppedCols, finalMatrix, activeCols]);
 
 	useEffect(() => {
 		if (finalMatrix && loading) {
@@ -55,12 +78,11 @@ const Main = () => {
 	}
 
 	const handleClick = () => {
-		if(loading) return
+		if (loading) return;
 		setLoading(true);
 		setFinalMatrix(null);
 		setMatrix(null);
 		setStoppedCols([false, false, false, false, false]);
-
 		Api.getMatrix({ x: 3, y: 5, max: 7 })
 				.then((res) => {
 					setFinalMatrix(res.data.matrix);
@@ -82,7 +104,9 @@ const Main = () => {
 										<div
 												key={colIndex}
 												className={`${styles.row} ${
-														loading && !stoppedCols[colIndex] ? styles.spinning : styles.bounce
+														loading && activeCols[colIndex] && !stoppedCols[colIndex]
+																? styles.spinning
+																: styles.bounce
 												}`}
 										>
 											{displayMatrix.map((row, rowIndex) => (
@@ -100,7 +124,7 @@ const Main = () => {
 							className={`${styles.spin} ${loading ? styles.loading : ''}`}
 					>
 						{loading ? (
-								<img src="/slots/assets/images/loading.png" alt=""/>
+								<img src="/slots/assets/images/loading.png" alt="" />
 						) : (
 								<img src="/slots/assets/images/spin.png" alt="Spin" />
 						)}
