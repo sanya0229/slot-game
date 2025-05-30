@@ -15,14 +15,21 @@ const Main = () => {
 		if (loading) {
 			let col = -1;
 			const startNext = () => {
-				setActiveCols((prev) => {
-					const updated = [...prev];
-					updated[col] = true;
-					return updated;
-				});
 				col++;
 				if (col < 5) {
-					setTimeout(startNext, 250);
+					setActiveCols((prev) => {
+						const updated = [...prev];
+						updated[col] = 'bounceStart';
+						return updated;
+					});
+					setTimeout(() => {
+						setActiveCols((prev) => {
+							const updated = [...prev];
+							updated[col] = 'spin';
+							return updated;
+						});
+						setTimeout(startNext, 200);
+					}, 220);
 				}
 			};
 			startNext();
@@ -35,14 +42,18 @@ const Main = () => {
 		let interval;
 		if (loading) {
 			interval = setInterval(() => {
-				setSpinningMatrix((prev) => {
-					const next = generateRandomMatrix(5, 3, 7);
-					return next.map((row, y) =>
-							row.map((_, x) =>
-									stoppedCols[x] ? finalMatrix[y][x] : (activeCols[x] ? next[y][x] : prev[y][x])
-							)
-					);
-				});
+				const next = generateRandomMatrix(5, 3, 7);
+				setSpinningMatrix((prev) =>
+						next.map((row, y) =>
+								row.map((_, x) =>
+										stoppedCols[x]
+												? finalMatrix[y][x]
+												: activeCols[x] === 'spin'
+														? next[y][x]
+														: prev[y][x]
+								)
+						)
+				);
 			}, 50);
 		}
 		return () => clearInterval(interval);
@@ -52,18 +63,32 @@ const Main = () => {
 		if (finalMatrix && loading) {
 			let col = -1;
 			const stopNext = () => {
-				setStoppedCols((prev) => {
-					const updated = [...prev];
-					updated[col] = true;
-					return updated;
-				});
 				col++;
-				if (col < 4) {
-					setTimeout(stopNext, 200);
-				} else {
+				if (col < 5) {
+					setActiveCols((prev) => {
+						const updated = [...prev];
+						updated[col] = 'bounceEnd';
+						return updated;
+					});
+					setStoppedCols((prev) => {
+						const updated = [...prev];
+						updated[col] = true;
+						return updated;
+					});
 					setTimeout(() => {
-						setMatrix(finalMatrix);
-						setLoading(false);
+						setActiveCols((prev) => {
+							const updated = [...prev];
+							updated[col] = false;
+							return updated;
+						});
+						if (col < 4) {
+							setTimeout(stopNext, 200);
+						} else {
+							setTimeout(() => {
+								setMatrix(finalMatrix);
+								setLoading(false);
+							}, 300);
+						}
 					}, 300);
 				}
 			};
@@ -83,7 +108,7 @@ const Main = () => {
 		setFinalMatrix(null);
 		setMatrix(null);
 		setStoppedCols([false, false, false, false, false]);
-		Api.getMatrix({ x: 3, y: 5, max: 7 })
+		Api.getMatrix({ x: 3, y: 5, max: 7, maxDelay: 3 })
 				.then((res) => {
 					setFinalMatrix(res.data.matrix);
 				})
@@ -100,24 +125,27 @@ const Main = () => {
 				<div className={styles.slothContainer}>
 					<div className={styles.reel}>
 						{displayMatrix &&
-								displayMatrix[0].map((_, colIndex) => (
-										<div
-												key={colIndex}
-												className={`${styles.row} ${
-														loading && activeCols[colIndex] && !stoppedCols[colIndex]
-																? styles.spinning
-																: styles.bounce
-												}`}
-										>
-											{displayMatrix.map((row, rowIndex) => (
-													<img
-															key={`${rowIndex}-${colIndex}`}
-															src={slotImages[row[colIndex]]}
-															alt={`icon_${row[colIndex]}`}
-													/>
-											))}
-										</div>
-								))}
+								displayMatrix[0].map((_, colIndex) => {
+									let colClass = '';
+									if (activeCols[colIndex] === 'bounceStart') {
+										colClass = styles.bounceStart;
+									} else if (activeCols[colIndex] === 'spin') {
+										colClass = styles.spinning;
+									} else if (activeCols[colIndex] === 'bounceEnd') {
+										colClass = styles.bounceEnd;
+									}
+									return (
+											<div key={colIndex} className={`${styles.row} ${colClass}`}>
+												{displayMatrix.map((row, rowIndex) => (
+														<img
+																key={`${rowIndex}-${colIndex}`}
+																src={slotImages[row[colIndex]]}
+																alt={`icon_${row[colIndex]}`}
+														/>
+												))}
+											</div>
+									);
+								})}
 					</div>
 					<div
 							onClick={handleClick}

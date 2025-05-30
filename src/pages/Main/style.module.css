@@ -65,7 +65,7 @@
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    opacity: 0.7;
+    opacity: 0.9;
 }
 
 .row {
@@ -83,6 +83,40 @@
     justify-content: center;
     align-items: center;
 }
+
+@keyframes bounceStart {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-15%);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+.bounceStart {
+    animation: bounceStart 0.4s ease-out;
+}
+
+@keyframes bounceEnd {
+    0% {
+        transform: translateY(0);
+    }
+    30% {
+        transform: translateY(30%);
+    }
+    80% {
+        transform: translateY(-10%);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+.bounceEnd {
+    animation: bounceEnd 0.6s ease;
+}
+
 @keyframes spin {
     0% {
         transform: translateY(-200%);
@@ -91,14 +125,9 @@
         transform: translateY(200%);
     }
 }
-
 .spinning img {
-    animation-name: spin;
-    animation-duration: 0.1s;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
+    animation: spin 0.1s linear infinite;
 }
-
 
 @keyframes bounce {
     0% {
@@ -114,7 +143,6 @@
         transform: translateY(0);
     }
 }
-
 .bounce img {
-    animation: bounce 0.50s ;
+    animation: bounce 0.2s;
 }
