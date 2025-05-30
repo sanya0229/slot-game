@@ -35,8 +35,8 @@ const Main = () => {
 					return updated;
 				});
 				col++;
-				if (col <= 3) {
-					setTimeout(stopNext, 300);
+				if (col < 4) {
+					setTimeout(stopNext, 200);
 				} else {
 					setTimeout(() => {
 						setMatrix(finalMatrix);
@@ -55,6 +55,7 @@ const Main = () => {
 	}
 
 	const handleClick = () => {
+		if(loading) return
 		setLoading(true);
 		setFinalMatrix(null);
 		setMatrix(null);
@@ -94,8 +95,15 @@ const Main = () => {
 										</div>
 								))}
 					</div>
-					<div onClick={handleClick} className={styles.spin}>
-						<img src="/slots/assets/images/spin.png" alt="Spin" />
+					<div
+							onClick={handleClick}
+							className={`${styles.spin} ${loading ? styles.loading : ''}`}
+					>
+						{loading ? (
+								<img src="/slots/assets/images/loading.png" alt=""/>
+						) : (
+								<img src="/slots/assets/images/spin.png" alt="Spin" />
+						)}
 					</div>
 				</div>
 			</div>
